@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estante 📚🐱</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --paper: #f5f0e8;
+    --cream: #ede7d5;
+    --rust: #c4522a;
+    --gold: #c9973a;
+    --sage: #6b7c5e;
+    --dust: #9e8e7e;
+    --muted: #7a6e62;
+    --card: #faf6ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Lora', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 3rem 4rem 2rem;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .logo span { color: var(--rust); }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-left: 2px solid var(--dust);
+    padding-left: 1rem;
+  }
+
+  .cat-deco {
+    margin-left: auto;
+    font-size: 2rem;
+    opacity: 0.4;
+    animation: catblink 4s ease-in-out infinite;
+  }
+
+  @keyframes catblink {
+    0%, 90%, 100% { opacity: 0.4; }
+    95% { opacity: 0.1; }
+  }
+
+  /* ── Main layout ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: calc(100vh - 120px);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Left panel — ranking ── */
+  .panel-left {
+    padding: 3rem 3rem 3rem 4rem;
+    border-right: 2px solid var(--ink);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+
+  .section-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  /* Book list */
+  #book-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .book-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--card);
+    border: 1.5px solid var(--cream);
+    padding: 0.75rem 1rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+  }
+
+  .book-item:active { cursor: grabbing; }
+
+  .book-item.dragging {
+    opacity: 0.4;
+    border-style: dashed;
+    border-color: var(--dust);
+  }
+
+  .book-item.drag-over {
+    border-color: var(--rust);
+    background: #fff8f4;
+    transform: translateX(4px);
+  }
+
+  .book-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dust);
+    width: 1.5rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .book-spine {
+    width: 6px;
+    height: 36px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .book-title {
+    font-size: 0.9rem;
+    font-weight: 400;
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  .drag-handle {
+    color: var(--dust);
+    font-size: 0.8rem;
+    opacity: 0.5;
+  }
+
+  /* Spine colors */
+  .spine-0 { background: #c4522a; }
+  .spine-1 { background: #c9973a; }
+  .spine-2 { background: #6b7c5e; }
+  .spine-3 { background: #7a6e62; }
+  .spine-4 { background: #3d6b8a; }
+  .spine-5 { background: #8a3d6b; }
+  .spine-6 { background: #6b8a3d; }
+  .spine-7 { background: #3d4f8a; }
+  .spine-8 { background: #8a6b3d; }
+  .spine-9 { background: #3d8a7a; }
+
+  .btn-analyze {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-analyze:hover {
+    background: var(--rust);
+    letter-spacing: 0.1em;
+  }
+
+  .btn-analyze:disabled {
+    background: var(--dust);
+    cursor: not-allowed;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Right panel — results ── */
+  .panel-right {
+    padding: 3rem 4rem 3rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--dust);
+    gap: 1rem;
+  }
+
+  .placeholder-icon {
+    font-size: 4rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .placeholder p {
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  /* Results */
+  #results { display: none; }
+  #results.visible { display: flex; flex-direction: column; gap: 2rem; }
+
+  /* Best match card */
+  .match-card {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .match-card::before {
+    content: '❤';
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 3rem;
+    opacity: 0.08;
+  }
+
+  .match-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.25rem;
+  }
+
+  .match-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.25rem;
+  }
+
+  .match-bio {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+
+  .match-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--gold);
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  /* Similarity bars */
+  .similarity-section {}
+
+  .sim-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .sim-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    width: 4rem;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .sim-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--cream);
+    position: relative;
+  }
+
+  .sim-bar {
+    height: 100%;
+    background: var(--rust);
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 0;
+  }
+
+  .sim-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dust);
+    width: 3.5rem;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Graph */
+  .graph-section {}
+
+  #graph-canvas {
+    width: 100%;
+    height: 260px;
+    background: var(--card);
+    border: 1.5px solid var(--cream);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #graph-canvas svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Recommendations */
+  .recs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .rec-book {
+    background: var(--card);
+    border: 1.5px solid var(--cream);
+    padding: 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+
+  .rec-book::before {
+    content: '📖';
+    display: block;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .rec-book:hover {
+    border-color: var(--rust);
+    transform: translateY(-2px);
+    box-shadow: 3px 3px 0 var(--cream);
+  }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 1rem 0;
+  }
+
+  .loading-dots span {
+    animation: blink 1.2s infinite;
+    opacity: 0;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .panel-left { border-right: none; border-bottom: 2px solid var(--ink); padding: 2rem; }
+    .panel-right { padding: 2rem; }
+    header { padding: 2rem; flex-wrap: wrap; }
+    .logo { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">es<span>t</span>ante</div>
+  <div class="tagline">recomendação por<br>contagem de inversões</div>
+  <div class="cat-deco">🐱</div>
+</header>
+
+<main>
+  <!-- LEFT: ranking -->
+  <div class="panel-left">
+    <div class="section-label">passo 1</div>
+    <h2 class="section-title">Ordene seus livros</h2>
+    <p class="section-sub">Arraste do seu favorito ao menos favorito.<br>Sua ordem revela quem você é como leitor.</p>
+
+    <div id="book-list"></div>
+
+    <button class="btn-analyze" id="btn-analyze" onclick="analyze()">
+      Analisar meu gosto literário →
+    </button>
+  </div>
+
+  <!-- RIGHT: results -->
+  <div class="panel-right">
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">📚</div>
+      <p>Ordene os livros ao lado<br>e descubra seu perfil de leitor<br><br><em style="font-size:0.8rem; opacity:0.7">O algoritmo usa contagem de inversões<br>para medir distância entre rankings</em></p>
+    </div>
+
+    <div id="results">
+      <!-- Best match -->
+      <div>
+        <div class="section-label">seu duplo literário</div>
+        <div class="match-card" id="match-card">
+          <div class="match-label">melhor compatibilidade</div>
+          <div class="match-name" id="match-name">—</div>
+          <div class="match-bio" id="match-bio">—</div>
+          <div class="match-stats">
+            <div class="stat">
+              <span class="stat-value" id="match-sim">—</span>
+              <span class="stat-label">similaridade</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="match-inv">—</span>
+              <span class="stat-label">inversões</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Similarity bars -->
+      <div class="similarity-section">
+        <div class="section-label">afinidade com todos os perfis</div>
+        <div id="sim-bars"></div>
+      </div>
+
+      <!-- Graph -->
+      <div class="graph-section">
+        <div class="section-label">grafo de afinidade</div>
+        <div id="graph-canvas"></div>
+      </div>
+
+      <!-- Recommendations -->
+      <div>
+        <div class="section-label">você vai amar</div>
+        <div class="section-title" style="font-size:1.2rem; margin-bottom:0.75rem">Recomendações</div>
+        <div class="recs-grid" id="recs-grid"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = 'http://localhost:8000';
+
+const BOOKS = [
+  "O Nome do Vento", "O Senhor dos Anéis", "O Caminho dos Reis",
+  "O Vale das Bonecas", "O Hobbit", "Harry Potter",
+  "O Bebê de Rosemary", "Orgulho e Preconceito", "IT - A Coisa", "Fahrenheit 451"
+];
+
+const SPINE_COLORS = [
+  '#c4522a','#c9973a','#6b7c5e','#7a6e62','#3d6b8a',
+  '#8a3d6b','#6b8a3d','#3d4f8a','#8a6b3d','#3d8a7a'
+];
+
+let order = [...BOOKS];
+let dragSrc = null;
+
+function renderBooks() {
+  const list = document.getElementById('book-list');
+  list.innerHTML = '';
+  order.forEach((book, i) => {
+    const div = document.createElement('div');
+    div.className = 'book-item';
+    div.draggable = true;
+    div.dataset.index = i;
+    div.innerHTML = `
+      <span class="book-rank">${i + 1}</span>
+      <div class="book-spine ${`spine-${BOOKS.indexOf(book) % 10}`}"></div>
+      <span class="book-title">${book}</span>
+      <span class="drag-handle">⠿</span>
+    `;
+    div.addEventListener('dragstart', e => {
+      dragSrc = i;
+      setTimeout(() => div.classList.add('dragging'), 0);
+    });
+    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+    div.addEventListener('dragover', e => {
+      e.preventDefault();
+      document.querySelectorAll('.book-item').forEach(d => d.classList.remove('drag-over'));
+      div.classList.add('drag-over');
+    });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      if (dragSrc !== null && dragSrc !== i) {
+        const moved = order.splice(dragSrc, 1)[0];
+        order.splice(i, 0, moved);
+        renderBooks();
+      }
+    });
+    list.appendChild(div);
+  });
+}
+
+async function analyze() {
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="loading">analisando<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></span>`;
+
+  const rankings = {};
+  order.forEach((book, i) => rankings[book] = i + 1);
+
+  try {
+    const res = await fetch(`${API}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rankings })
+    });
+    const data = await res.json();
+    renderResults(data);
+  } catch (e) {
+    alert('Não foi possível conectar ao servidor. Certifique-se que o backend está rodando em localhost:8000');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Analisar novamente →';
+}
+
+function renderResults(data) {
+  document.getElementById('placeholder').style.display = 'none';
+  const results = document.getElementById('results');
+  results.classList.add('visible');
+
+  // Best match
+  const bm = data.best_match;
+  document.getElementById('match-name').textContent = bm.name;
+  document.getElementById('match-bio').textContent = bm.bio;
+  document.getElementById('match-sim').textContent = bm.similarity + '%';
+  document.getElementById('match-inv').textContent = bm.inversions;
+
+  // Similarity bars
+  const barsDiv = document.getElementById('sim-bars');
+  barsDiv.innerHTML = '';
+  const sorted = Object.entries(data.similarities).sort((a,b) => b[1].similarity - a[1].similarity);
+  sorted.forEach(([name, info]) => {
+    barsDiv.innerHTML += `
+      <div class="sim-row">
+        <span class="sim-name">${name}</span>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar" data-val="${info.similarity}" style="width:0%"></div>
+        </div>
+        <span class="sim-val">${info.similarity}% <span style="opacity:0.5;font-size:0.6rem">(${info.inversions} inv)</span></span>
+      </div>`;
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.sim-bar').forEach(bar => {
+      bar.style.width = bar.dataset.val + '%';
+    });
+  }, 100);
+
+  // Graph
+  renderGraph(data.graph);
+
+  // Recommendations
+  const grid = document.getElementById('recs-grid');
+  grid.innerHTML = data.recommendations.map(b =>
+    `<div class="rec-book">${b}</div>`
+  ).join('');
+}
+
+function renderGraph(graphData) {
+  const container = document.getElementById('graph-canvas');
+  const W = container.offsetWidth || 500;
+  const H = 260;
+  const cx = W / 2, cy = H / 2;
+
+  // Position nodes in circle, user in center
+  const nonUser = graphData.nodes.filter(n => !n.isUser);
+  const positions = {};
+  positions['Você'] = { x: cx, y: cy };
+  nonUser.forEach((n, i) => {
+    const angle = (2 * Math.PI * i) / nonUser.length - Math.PI / 2;
+    positions[n.id] = {
+      x: cx + Math.cos(angle) * (Math.min(W, H) * 0.36),
+      y: cy + Math.sin(angle) * (Math.min(W, H) * 0.36)
+    };
+  });
+
+  const maxW = Math.max(...graphData.edges.map(e => e.weight), 1);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+  // Edges
+  graphData.edges.forEach(e => {
+    const p1 = positions[e.source];
+    const p2 = positions[e.target];
+    if (!p1 || !p2) return;
+    const isUserEdge = e.source === 'Você' || e.target === 'Você';
+    const opacity = 0.1 + 0.5 * (e.weight / maxW);
+    const strokeW = isUserEdge ? 1.5 + 2 * (e.weight / maxW) : 0.8;
+    const color = isUserEdge ? '#c4522a' : '#9e8e7e';
+    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}"
+      stroke="${color}" stroke-width="${strokeW}" opacity="${opacity}"/>`;
+  });
+
+  // Nodes
+  graphData.nodes.forEach(n => {
+    const p = positions[n.id];
+    if (!p) return;
+    if (n.isUser) {
+      svg += `<circle cx="${p.x}" cy="${p.y}" r="18" fill="#1a1209"/>`;
+      svg += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle" fill="#f5f0e8"
+        font-family="Playfair Display, serif" font-size="9" font-weight="bold">Você</text>`;
+    } else {
+      svg += `<circle cx="${p.x}" cy="${p.y}" r="12" fill="#c9973a" opacity="0.9"/>`;
+      svg += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle" fill="#1a1209"
+        font-family="DM Mono, monospace" font-size="7">${n.id}</text>`;
+    }
+  });
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+// Init
+renderBooks();
+</script>
+</body>
+</html>
