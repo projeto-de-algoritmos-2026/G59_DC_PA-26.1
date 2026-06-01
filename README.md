@@ -1,5 +1,16 @@
 # 📚🐱 Estante — Recomendação por Contagem de Inversões
 
+## Aluno
+
+| Nome | Matrícula |
+|------|-----------|
+| Leticia de Carvalho dos Santos | 222022135 |
+
+## Apresentação
+
+🎥 [Vídeo de apresentação](https://www.youtube.com/link-aqui)
+
+---
 ## Como funciona
 
 1. Você ordena 10 livros do favorito ao menos favorito
